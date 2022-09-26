@@ -10,8 +10,8 @@
 const char* ssid = "P307";         // The SSID (name) of the Wi-Fi network you want to connect to
 const char* password = "bayanhdeptrai";     // The password of the Wi-Fi network
 
-int ledWifiStatus = D3;
-int pumpPush = D1; 
+int ledWifiStatus = D1;
+int pumpPush = D5; 
 int timeSleep = 15;
 
 unsigned long currentMillisWifi = 0;
@@ -33,7 +33,7 @@ void handlerPumps() {
 
 
 bool isWatered = false;
-String timeSet = "00:59";
+String timeSet = "01:30";
 
 void handleTime() {
   String formattedTime = timeClient.getFormattedTime(); 
@@ -73,7 +73,8 @@ void loop() {
     handleTime();
     if(isWatered == true) {
       Serial.println("Bat dau ngu dong 15s");
-      ESP.deepSleep(15e6);
+      ESP.deepSleep(timeSleep*1e6);
+      digitalWrite(D0, HIGH);
     }
-    
+    // khi chay that thi setTimeSleep = 86390;
 }
