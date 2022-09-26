@@ -7,40 +7,41 @@
 #include <WiFiUdp.h>
 
 
-const char* ssid     = "P307";         // The SSID (name) of the Wi-Fi network you want to connect to
+const char* ssid = "P307";         // The SSID (name) of the Wi-Fi network you want to connect to
 const char* password = "bayanhdeptrai";     // The password of the Wi-Fi network
 
-int ledWifiStatus = D0;
+int ledWifiStatus = D3;
 int pumpPush = D1; 
+int timeSleep = 15;
 
 unsigned long currentMillisWifi = 0;
 unsigned long currentMillis = millis();
-unsigned long led1Delay = 2000;
-unsigned long led2Delay = 3000;
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org");
 
 bool onPumps = false;
-int i=0;
+bool isDeepSleeped = false;
 
 void handlerPumps() {
   digitalWrite(pumpPush, LOW);
-  delay(4000);
-  Serial.print(++i);
-  digitalWrite(pumpPush,HIGH);
+  Serial.println("Cho bom 10s");
+  delay(10000);
+  digitalWrite(pumpPush, HIGH);
+  
 }
 
-String timeSet = "17:50";
-String convert;
+
+bool isWatered = false;
+String timeSet = "00:59";
+
 void handleTime() {
   String formattedTime = timeClient.getFormattedTime(); 
   String num = formattedTime.substring(0,5);
   Serial.println(num);
-  if(num == timeSet) {
-    Serial.println("YES");
-  }else {
-    Serial.println("NO");
+  if(num == timeSet && !isWatered) {
+    handlerPumps();
+    isWatered = true;
   }
 }
 
@@ -50,29 +51,29 @@ void setup() {
   Serial.begin(115200); 
   WiFi.begin(ssid, password);
   pinMode(pumpPush, OUTPUT);
+  digitalWrite(pumpPush, HIGH);
+  pinMode(ledWifiStatus, OUTPUT);
+  pinMode(ledWifiStatus, HIGH);
   timeClient.begin();
   timeClient.setTimeOffset(25200);
-  
+  digitalWrite(D0, LOW);
 }
-
 void loop() {
   timeClient.update();
   if(WiFi.status() == WL_CONNECTED && !isConnected) {
     Serial.println("Connected");
+    digitalWrite(ledWifiStatus, LOW);
     isConnected = true;
   }
   if(WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
     digitalWrite(ledWifiStatus, !digitalRead(ledWifiStatus));
-    if(millis() - currentMillisWifi >= 1000) {
-      currentMillisWifi = millis();
-    }
+    delay(500);
     isConnected = false;
-  }
-  if(millis() - previosTime >= 1000) {
-    previosTime = millis();
+  }  
     handleTime();
-  }
-  
-  
+    if(isWatered == true) {
+      Serial.println("Bat dau ngu dong 15s");
+      ESP.deepSleep(15e6);
+    }
+    
 }
